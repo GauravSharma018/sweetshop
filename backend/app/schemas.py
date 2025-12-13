@@ -39,3 +39,6 @@ class SweetResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class RestockRequest(BaseModel):
+    quantity: int
