@@ -92,3 +92,40 @@ def test_authenticated_user_can_list_sweets():
     assert isinstance(data, list)
     assert len(data) == 1
     assert data[0]["name"] == "Barfi"
+
+
+def test_user_can_search_sweets_by_category():
+    token = register_and_login()
+
+    # Add sweets
+    client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Ladoo",
+            "category": "Indian",
+            "price": 10,
+            "quantity": 100
+        }
+    )
+
+    client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Brownie",
+            "category": "Bakery",
+            "price": 30,
+            "quantity": 20
+        }
+    )
+
+    response = client.get(
+        "/api/sweets/search?category=Indian",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Ladoo"
