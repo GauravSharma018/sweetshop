@@ -44,3 +44,24 @@ def test_add_sweet_requires_authentication():
     )
 
     assert response.status_code == 401
+
+def test_authenticated_user_can_add_sweet():
+    token = register_and_login()
+
+    response = client.post(
+        "/api/sweets",
+        headers={
+            "Authorization": f"Bearer {token}"
+        },
+        json={
+            "name": "Ladoo",
+            "category": "Indian",
+            "price": 10.0,
+            "quantity": 100
+        }
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Ladoo"
+    assert data["quantity"] == 100
