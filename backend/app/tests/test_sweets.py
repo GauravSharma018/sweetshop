@@ -129,3 +129,57 @@ def test_user_can_search_sweets_by_category():
     data = response.json()
     assert len(data) == 1
     assert data[0]["name"] == "Ladoo"
+
+
+def test_user_can_purchase_sweet_and_quantity_decreases():
+    token = register_and_login()
+
+    # Create sweet
+    create_resp = client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Jalebi",
+            "category": "Indian",
+            "price": 15,
+            "quantity": 2
+        }
+    )
+
+    sweet_id = create_resp.json()["id"]
+
+    # Purchase once
+    response = client.post(
+        f"/api/sweets/{sweet_id}/purchase",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["quantity"] == 1
+
+
+def test_purchase_fails_when_out_of_stock():
+    token = register_and_login()
+
+    # Create sweet with zero quantity
+    create_resp = client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Rasgulla",
+            "category": "Indian",
+            "price": 20,
+            "quantity": 0
+        }
+    )
+
+    sweet_id = create_resp.json()["id"]
+
+    response = client.post(
+        f"/api/sweets/{sweet_id}/purchase",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Sweet out of stock"
