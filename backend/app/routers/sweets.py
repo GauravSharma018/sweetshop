@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
+from fastapi import Query
+from typing import Optional
 
 from app.deps import get_db, get_current_user
 from app import models
@@ -44,3 +46,29 @@ def list_sweets(
     current_user=Depends(get_current_user)
 ):
     return db.query(models.Sweet).all()
+
+
+@router.get(
+    "/search",
+    response_model=list[SweetResponse]
+)
+def search_sweets(
+    name: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    min_price: Optional[float] = Query(None),
+    max_price: Optional[float] = Query(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    query = db.query(models.Sweet)
+
+    if name:
+        query = query.filter(models.Sweet.name.ilike(f"%{name}%"))
+    if category:
+        query = query.filter(models.Sweet.category == category)
+    if min_price is not None:
+        query = query.filter(models.Sweet.price >= min_price)
+    if max_price is not None:
+        query = query.filter(models.Sweet.price <= max_price)
+
+    return query.all()
