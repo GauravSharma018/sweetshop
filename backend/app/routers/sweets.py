@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from fastapi import Query
 from typing import Optional
+from fastapi import HTTPException
 
 from app.deps import get_db, get_current_user
 from app import models
@@ -72,3 +73,36 @@ def search_sweets(
         query = query.filter(models.Sweet.price <= max_price)
 
     return query.all()
+
+@router.post(
+    "/{sweet_id}/purchase",
+    response_model=SweetResponse
+)
+def purchase_sweet(
+    sweet_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    sweet = (
+        db.query(models.Sweet)
+        .filter(models.Sweet.id == sweet_id)
+        .first()
+    )
+
+    if not sweet:
+        raise HTTPException(
+            status_code=404,
+            detail="Sweet not found"
+        )
+
+    if sweet.quantity <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Sweet out of stock"
+        )
+
+    sweet.quantity -= 1
+    db.commit()
+    db.refresh(sweet)
+
+    return sweet
