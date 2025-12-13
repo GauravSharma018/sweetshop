@@ -28,3 +28,14 @@ class SweetCreate(BaseModel):
     category: str
     price: float
     quantity: int
+
+
+class SweetResponse(BaseModel):
+    id: int
+    name: str
+    category: str
+    price: float
+    quantity: int
+
+    class Config:
+        orm_mode = True
