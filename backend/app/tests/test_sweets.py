@@ -65,3 +65,30 @@ def test_authenticated_user_can_add_sweet():
     data = response.json()
     assert data["name"] == "Ladoo"
     assert data["quantity"] == 100
+
+
+def test_authenticated_user_can_list_sweets():
+    token = register_and_login()
+
+    # Add a sweet first
+    client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Barfi",
+            "category": "Indian",
+            "price": 20.0,
+            "quantity": 50
+        }
+    )
+
+    response = client.get(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["name"] == "Barfi"
