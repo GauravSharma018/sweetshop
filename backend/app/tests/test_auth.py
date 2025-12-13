@@ -50,3 +50,28 @@ def test_register_fails_if_username_exists():
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Username already exists"
+def test_user_can_login_and_receive_token():
+    clear_users_table()
+
+    # Register user first
+    client.post(
+        "/api/auth/register",
+        json={
+            "username": "loginuser",
+            "password": "loginpass"
+        }
+    )
+
+    # Attempt login
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "username": "loginuser",
+            "password": "loginpass"
+        }
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
