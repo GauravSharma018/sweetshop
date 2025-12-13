@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 
@@ -16,30 +16,37 @@ def get_db():
 
 
 def get_current_user(
-    token: str = Depends(
-        lambda: None
-    ),
+    authorization: str = Header(None),
     db: Session = Depends(get_db)
 ):
-    if not token:
+    if authorization is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
 
     try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication scheme"
+            )
+
         payload = jwt.decode(
-            token.replace("Bearer ", ""),
+            token,
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
-        username: str = payload.get("sub")
+
+        username: str | None = payload.get("sub")
         if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
-    except JWTError:
+
+    except (JWTError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
