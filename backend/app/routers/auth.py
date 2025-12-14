@@ -8,10 +8,8 @@ from app.schemas import UserCreate, UserResponse
 from app.deps import get_db
 
 router = APIRouter(
-    prefix="/api/auth",
     tags=["auth"]
 )
-
 
 @router.post(
     "/register",
@@ -73,8 +71,12 @@ def login_user(
         )
 
     token = create_access_token(
-        data={"sub": user.username}
+    data={
+        "sub": user.username,
+        "is_admin": user.is_admin
+    }
     )
+
 
     return {
         "access_token": token,

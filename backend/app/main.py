@@ -1,18 +1,17 @@
 from fastapi import FastAPI
-from .database import engine
-from . import models
-from .routers import auth, sweets
+from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI()
 
-app = FastAPI(title="Sweet Shop Management API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all origins for dev
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-models.Base.metadata.create_all(bind=engine)
+from app.routers import auth, sweets
 
-app.include_router(auth.router)
-app.include_router(sweets.router)
-
-
-
-@app.get("/")
-def health_check():
-    return {"status": "Sweet Shop API is running"}
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(sweets.router, prefix="/api/sweets", tags=["Sweets"])

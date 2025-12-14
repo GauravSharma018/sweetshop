@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.database import SessionLocal
 from app import models
+from app.auth import hash_password
 
 client = TestClient(app)
 
@@ -183,3 +184,73 @@ def test_purchase_fails_when_out_of_stock():
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Sweet out of stock"
+
+
+def test_admin_can_restock_sweet():
+    clear_tables()
+
+    # Create admin user manually
+    db = SessionLocal()
+    admin = models.User(
+        username="admin",
+         password_hash=hash_password("adminpass"),
+        is_admin=True
+    )
+    db.add(admin)
+    db.commit()
+    db.close()
+
+    # Login admin
+    response = client.post(
+        "/api/auth/login",
+        json={"username": "admin", "password": "adminpass"}
+    )
+    token = response.json()["access_token"]
+
+    # Create sweet
+    create_resp = client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Kaju Katli",
+            "category": "Indian",
+            "price": 50,
+            "quantity": 5
+        }
+    )
+    sweet_id = create_resp.json()["id"]
+
+    # Restock
+    restock_resp = client.post(
+        f"/api/sweets/{sweet_id}/restock",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"quantity": 10}
+    )
+
+    assert restock_resp.status_code == 200
+    assert restock_resp.json()["quantity"] == 15
+
+
+def test_non_admin_cannot_restock():
+    token = register_and_login()
+
+    create_resp = client.post(
+        "/api/sweets",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "name": "Peda",
+            "category": "Indian",
+            "price": 30,
+            "quantity": 5
+        }
+    )
+    sweet_id = create_resp.json()["id"]
+
+    response = client.post(
+        f"/api/sweets/{sweet_id}/restock",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"quantity": 5}
+    )
+
+    assert response.status_code == 403
+    

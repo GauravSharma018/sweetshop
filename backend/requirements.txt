@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydanatic
+sqlalchemy
+mysql database
+passlib[bycrypt]
