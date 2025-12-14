@@ -8,23 +8,14 @@ export default function Login({ onLogin, goToRegister }) {
 
   const handleLogin = async () => {
     try {
-      const res = await api.post(
-        "/auth/login",
-        {
-          username: username,
-          password: password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await api.post("/auth/login", {
+        username,
+        password,
+      });
 
       localStorage.setItem("token", res.data.access_token);
-      setError("");
       onLogin();
-    } catch (err) {
+    } catch {
       setError("Invalid credentials");
     }
   };
@@ -32,26 +23,25 @@ export default function Login({ onLogin, goToRegister }) {
   return (
     <div className="container">
       <div className="card">
-        <h2>Login</h2>
+        <h2>Welcome Back 👋</h2>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
 
         <input
           placeholder="Username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={e => setUsername(e.target.value)}
         />
-
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
         />
 
         <button onClick={handleLogin}>Login</button>
 
-        <p style={{ marginTop: "10px" }}>
+        <p style={{ marginTop: 10 }}>
           New user?{" "}
           <button className="secondary" onClick={goToRegister}>
             Register

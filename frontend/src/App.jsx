@@ -1,43 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
-function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
+export default function App() {
+  const [loggedIn, setLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  );
   const [showRegister, setShowRegister] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setLoggedIn(true);
-    }
-  }, []);
-
-  const handleLogin = () => {
-    setLoggedIn(true);
-  };
-
-  const handleLogout = () => {
+  const logout = () => {
     localStorage.removeItem("token");
     setLoggedIn(false);
-    setShowRegister(false);
   };
 
   if (!loggedIn) {
     return showRegister ? (
-      <Register
-        goToLogin={() => setShowRegister(false)}
-      />
+      <Register goToLogin={() => setShowRegister(false)} />
     ) : (
       <Login
-        onLogin={handleLogin}
+        onLogin={() => setLoggedIn(true)}
         goToRegister={() => setShowRegister(true)}
       />
     );
   }
 
-  return <Dashboard onLogout={handleLogout} />;
+  return <Dashboard onLogout={logout} />;
 }
-
-export default App;
